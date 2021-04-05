@@ -1,2 +1,11 @@
+# Editor stuff and dependencies
 .vscode/
 node_modules/
+yarn-error.log
+
+# Typescript transpiled stuff
+built/
+
+# secrets
+.env.development
+.env.production

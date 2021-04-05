@@ -6,5 +6,4 @@ yarn.lock
 .prettierrc.json
 .gitignore
 
-.husky/
 .vscode/
