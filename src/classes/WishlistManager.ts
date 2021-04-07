@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { Message } from "discord.js";
 
 import { DATA_FOLDER_PATH } from "../constants";
 
@@ -9,6 +10,11 @@ import WishlistItem from "../interfaces/WishlistItem";
 class WishlistManager {
   private wishlistsFilePath = path.resolve(DATA_FOLDER_PATH, "wishlists.json");
   private wishlists = this.loadWishlists();
+  private message: Message;
+
+  constructor(message: Message) {
+    this.message = message;
+  }
 
   loadWishlists(): Wishlist[] {
     let wishlists = [] as Wishlist[];
@@ -31,7 +37,11 @@ class WishlistManager {
   }
 
   addWishlist(title: string): void {
-    const newWishlist: Wishlist = { title, items: [] };
+    const newWishlist: Wishlist = {
+      title,
+      author: this.message.author.username,
+      items: [],
+    };
     this.wishlists.push(newWishlist);
     this.save();
   }

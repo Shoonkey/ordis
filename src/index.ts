@@ -16,8 +16,8 @@ client.on("message", (message) => {
     return;
   }
 
-  const manager = new CommandManager(message.channel, [
-    { name: "wishlist", command: new WishlistCommand(message.channel) },
+  const manager = new CommandManager(message, [
+    { name: "wishlist", command: new WishlistCommand(message) },
   ]);
 
   manager.processCommand(message);

@@ -1,24 +1,24 @@
-import { TextChannel } from "discord.js";
+import { Message } from "discord.js";
 
 abstract class Command {
-  protected channel: TextChannel;
-  private readonly TYPE_TIMEOUT: number = 2000;
+  protected message: Message;
+  private readonly TYPE_TIMEOUT = 2000;
 
-  constructor(channel: TextChannel) {
-    this.channel = channel;
+  constructor(message: Message) {
+    this.message = message;
   }
 
   type(message: string, typeTimeout: number = this.TYPE_TIMEOUT): void {
-    this.channel.startTyping();
+    this.message.channel.startTyping();
 
     setTimeout(() => {
       this.sendMessage(message);
-      this.channel.stopTyping();
+      this.message.channel.stopTyping();
     }, typeTimeout);
   }
 
   sendMessage(message: string): void {
-    this.channel.send(message);
+    this.message.channel.send(message);
   }
 
   abstract run(args: string[]): void;

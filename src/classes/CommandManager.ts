@@ -1,4 +1,4 @@
-import { Message, TextChannel } from "discord.js";
+import { Message } from "discord.js";
 
 import { PREFIX } from "../constants";
 import { UnknownCommand } from "../commands";
@@ -10,11 +10,11 @@ interface CommandDescriptor {
 }
 
 class CommandManager {
-  private channel: TextChannel;
+  private message: Message;
   private commandDescriptors: CommandDescriptor[];
 
-  constructor(channel: TextChannel, commandDescriptors: CommandDescriptor[]) {
-    this.channel = channel;
+  constructor(message: Message, commandDescriptors: CommandDescriptor[]) {
+    this.message = message;
     this.commandDescriptors = commandDescriptors;
   }
 
@@ -24,7 +24,7 @@ class CommandManager {
     );
 
     if (!descriptor) {
-      new UnknownCommand(this.channel).run();
+      new UnknownCommand(this.message).run();
       return;
     }
 
