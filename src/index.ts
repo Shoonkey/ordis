@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import { Client } from "discord.js";
 
 import CommandManager from "./classes/CommandManager";
+import { WishlistCommand } from "./commands";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -15,7 +16,10 @@ client.on("message", (message) => {
     return;
   }
 
-  const manager = new CommandManager(message.channel);
+  const manager = new CommandManager(message.channel, [
+    { name: "wishlist", command: new WishlistCommand(message.channel) },
+  ]);
+
   manager.processCommand(message);
 });
 

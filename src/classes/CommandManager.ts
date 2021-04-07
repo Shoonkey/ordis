@@ -1,24 +1,34 @@
 import { Message, TextChannel } from "discord.js";
 
 import { PREFIX } from "../constants";
-import { WishlistCommand, UnknownCommand } from "../commands";
+import { UnknownCommand } from "../commands";
+import Command from "./Command";
+
+interface CommandDescriptor {
+  name: string;
+  command: Command;
+}
 
 class CommandManager {
   private channel: TextChannel;
+  private commandDescriptors: CommandDescriptor[];
 
-  constructor(channel: TextChannel) {
+  constructor(channel: TextChannel, commandDescriptors: CommandDescriptor[]) {
     this.channel = channel;
+    this.commandDescriptors = commandDescriptors;
   }
 
   runCommand(command: string, args: string[]): void {
-    switch (command) {
-      case "wishlist":
-        new WishlistCommand(this.channel).run(args);
-        break;
-      default:
-        new UnknownCommand(this.channel).run();
-        break;
+    const descriptor = this.commandDescriptors.find(
+      (descriptor) => descriptor.name === command
+    );
+
+    if (!descriptor) {
+      new UnknownCommand(this.channel).run();
+      return;
     }
+
+    descriptor.command.run(args);
   }
 
   processCommand(message: Message): void {
