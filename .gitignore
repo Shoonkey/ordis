@@ -6,6 +6,9 @@ yarn-error.log
 # Typescript transpiled stuff
 built/
 
+# The bot data, saved locally
+data/
+
 # secrets
 .env.development
 .env.production

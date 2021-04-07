@@ -1,13 +1,12 @@
 import Command from "../classes/Command";
-import Wishlist from "../interfaces/Wishlist";
+import WishlistManager from "../classes/WishlistManager";
+import UnknownCommand from "./UnknownCommand";
 
 class WishlistCommand extends Command {
-  loadWishlists(): Wishlist[] {
-    return [];
-  }
+  private manager = new WishlistManager();
 
-  printAllLists() {
-    const wishlists = this.loadWishlists();
+  printAllLists(): void {
+    const wishlists = this.manager.loadWishlists();
 
     if (wishlists.length === 0) {
       this.sendMessage(
@@ -17,18 +16,31 @@ class WishlistCommand extends Command {
     }
 
     this.sendMessage(`
-      > *Wishlistas warfremísticas*
+      **Wishlistas warfremísticas**
       ${wishlists.map(
         (wishlist) =>
-          `- ${wishlist.title} (@${wishlist.author}, ${wishlist.items.length} itens)`
+          `- ${wishlist.title} (${
+            wishlist.author ? `@${wishlist.author}` : "alguém"
+          }, ${wishlist.items.length} itens)`
       )}
     `);
   }
 
-  run(args: string[]) {
+  run(args: string[]): void {
     if (args.length === 0) {
       this.printAllLists();
       return;
+    }
+
+    const [command, ...commandArgs] = args;
+
+    switch (command) {
+      case "add":
+        this.manager.addWishlist(commandArgs[0]);
+        this.channel.send("Wishlista adicionada!");
+        break;
+      default:
+        new UnknownCommand(this.channel).run();
     }
   }
 }
