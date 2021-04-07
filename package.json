@@ -1,7 +1,7 @@
 {
-  "name": "warframe-bot",
+  "name": "cephalon-potato",
   "version": "1.0.0",
-  "description": "A Warframe bot for the Topotatoes Order Discord server",
+  "description": "Cephalon Potato, a Warframe bot for Discord",
   "main": "src/index.js",
   "author": "Shoonkey <richardsoeuzin@gmail.com>",
   "license": "MIT",
