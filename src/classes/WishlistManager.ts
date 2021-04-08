@@ -37,28 +37,35 @@ class WishlistManager {
   }
 
   addWishlist(title: string): void {
+    if (this.getWishlist(title))
+      throw new Error(`Já há uma wishlista chamada "${title}"`);
+
     const newWishlist: Wishlist = {
       title,
       author: this.message.author.username,
       items: [],
     };
+
     this.wishlists.push(newWishlist);
     this.save();
   }
 
-  getWishlist(title: string): Wishlist {
+  getWishlist(title: string): Wishlist | null {
     const wishlist = this.wishlists.find(
       (wishlist) => wishlist.title === title
     );
 
-    if (!wishlist)
-      throw new Error(`Não parece haver uma wishlista chamada "${title}"`);
-
-    return wishlist;
+    return wishlist || null;
   }
 
   updateWishlistTitle(currentTitle: string, newTitle: string): void {
     const wishlist = this.getWishlist(currentTitle);
+
+    if (!wishlist)
+      throw new Error(
+        `Não parece haver uma wishlista chamada "${currentTitle}"`
+      );
+
     wishlist.title = newTitle;
     this.save();
   }
@@ -68,8 +75,8 @@ class WishlistManager {
       (wishlist) => wishlist.title === title
     );
 
-    if (!wishlistIndex)
-      throw new Error(`Parece que já não há uma wishlist "${title}"`);
+    if (wishlistIndex === -1)
+      throw new Error(`Não parece haver uma wishlista chamada "${title}"`);
 
     this.wishlists.splice(wishlistIndex, 1);
     this.save();
@@ -77,6 +84,12 @@ class WishlistManager {
 
   addWishlistItem(wishlistTitle: string, item: WishlistItem): void {
     const wishlist = this.getWishlist(wishlistTitle);
+
+    if (!wishlist)
+      throw new Error(
+        `Não parece haver uma wishlista chamada "${wishlistTitle}"`
+      );
+
     wishlist.items.push(item);
     this.save();
   }
@@ -88,6 +101,12 @@ class WishlistManager {
     newValue: WishlistItem[K]
   ): void {
     const wishlist = this.getWishlist(wishlistTitle);
+
+    if (!wishlist)
+      throw new Error(
+        `Não parece haver uma wishlista chamada "${wishlistTitle}"`
+      );
+
     const wishlistItem = wishlist.items.find((item) => item.name === itemName);
 
     if (!wishlistItem)
@@ -101,6 +120,12 @@ class WishlistManager {
 
   removeWishlistItem(wishlistTitle: string, itemName: string): void {
     const wishlist = this.getWishlist(wishlistTitle);
+
+    if (!wishlist)
+      throw new Error(
+        `Não parece haver uma wishlista chamada "${wishlistTitle}"`
+      );
+
     const itemIndex = wishlist.items.findIndex(
       (item) => item.name === itemName
     );
