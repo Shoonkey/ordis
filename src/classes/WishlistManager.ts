@@ -6,6 +6,7 @@ import { DATA_FOLDER_PATH } from "../constants";
 
 import Wishlist from "../interfaces/Wishlist";
 import WishlistItem from "../interfaces/WishlistItem";
+import { WishlistItemPart, WishlistItemType } from "../types/WishlistItemTypes";
 
 class WishlistManager {
   private wishlistsFilePath = path.resolve(DATA_FOLDER_PATH, "wishlists.json");
@@ -15,6 +16,8 @@ class WishlistManager {
   constructor(message: Message) {
     this.message = message;
   }
+
+  //#region [ rgba(155, 89, 182, 0.07) ] Wishlist
 
   loadWishlists(): Wishlist[] {
     let wishlists = [] as Wishlist[];
@@ -82,7 +85,32 @@ class WishlistManager {
     this.save();
   }
 
-  addWishlistItem(wishlistTitle: string, item: WishlistItem): void {
+  save(): void {
+    try {
+      fs.writeFileSync(this.wishlistsFilePath, JSON.stringify(this.wishlists));
+    } catch (e) {
+      throw new Error("Não deu pra salvar as wishlistas");
+    }
+  }
+
+  //#endregion
+
+  //#region [ rgba(230, 126, 34, 0.07) ] Wishlist Item
+
+  parseToWishlistItem(args: string[]): WishlistItem {
+    const [name, part, type, quantity] = args;
+
+    return {
+      name: name,
+      part: part as WishlistItemPart,
+      type: type as WishlistItemType,
+      quantity: Number(quantity),
+    };
+  }
+
+  addWishlistItem(args: string[]): Wishlist {
+    const wishlistTitle = args.shift();
+    const item: WishlistItem = this.parseToWishlistItem(args);
     const wishlist = this.getWishlist(wishlistTitle);
 
     if (!wishlist)
@@ -92,6 +120,8 @@ class WishlistManager {
 
     wishlist.items.push(item);
     this.save();
+
+    return wishlist;
   }
 
   updateWishlistItem<K extends keyof WishlistItem>(
@@ -139,13 +169,7 @@ class WishlistManager {
     this.save();
   }
 
-  save(): void {
-    try {
-      fs.writeFileSync(this.wishlistsFilePath, JSON.stringify(this.wishlists));
-    } catch (e) {
-      throw new Error("Não deu pra salvar as wishlistas");
-    }
-  }
+  //#endregion
 }
 
 export default WishlistManager;
