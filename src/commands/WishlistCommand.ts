@@ -47,8 +47,8 @@ class WishlistCommand extends Command {
 
     if (wishlist.items.length === 0) message += "\tSem itens";
     else
-      wishlist.items.forEach(({ name, quantity }) => {
-        message += `\t- ${quantity}x ${name}\n`;
+      wishlist.items.forEach(({ name, part, quantity }) => {
+        message += `\t- ${quantity}x ${name}'s ${part};\n`;
       });
 
     this.sendMessage(message);
@@ -67,6 +67,10 @@ class WishlistCommand extends Command {
         case "add":
           this.manager.addWishlist(commandArgs[0]);
           this.sendMessage("Wishlista adicionada!");
+          break;
+        case "addItem":
+          this.manager.addWishlistItem(commandArgs);
+          this.sendMessage("Item scaneado!");
           break;
         case "show":
           this.printList(commandArgs[0]);

@@ -1,5 +1,8 @@
+import { WishlistItemPart, WishlistItemType } from "../types/WishlistItemTypes";
+
 export default interface WishlistItem {
   name: string;
-  type: "warframe" | "primary" | "secondary" | "melee" | "archwing";
+  part: WishlistItemPart;
+  type: WishlistItemType;
   quantity: number;
 }
