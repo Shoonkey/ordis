@@ -2,8 +2,9 @@ import { Client, CommandInteraction } from "discord.js";
 
 import { Command } from "../core/Command";
 import Ping from "./ping";
+import Wish from "./wish";
 
-const commands: Command[] = [Ping];
+const commands: Command[] = [Ping, Wish];
 
 export async function handleSlashCommand(
   client: Client,
