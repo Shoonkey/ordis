@@ -1,17 +1,14 @@
-import { Client, CommandInteraction, ApplicationCommandType } from "discord.js";
+import { Client, CommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { Command } from "../core/Command";
+import Command from "../core/models/Command";
 
 const Ping: Command = {
-  name: "ping",
-  description: "Replies with Pong!",
-  type: ApplicationCommandType.ChatInput,
-  run: async (client: Client, interaction: CommandInteraction) => {
-    await interaction.followUp({
-      ephemeral: true,
-      content: "PONG PORRA",
-    });
-  },
+	data: new SlashCommandBuilder()
+		.setName('ping')
+		.setDescription('Replies with Pong!'),
+	async execute(interaction: CommandInteraction) {
+		await interaction.reply('PONG PORRA!');
+	},
 };
 
-export default Ping;
+ export default Ping;

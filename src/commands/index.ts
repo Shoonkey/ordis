@@ -1,29 +1,27 @@
-import { Client, CommandInteraction } from "discord.js";
+import { Client, Collection, CommandInteraction } from "discord.js";
 
-import { Command } from "../core/Command";
 import Ping from "./ping";
 import Wish from "./wish";
 
-const commands: Command[] = [Ping, Wish];
+const commands: Collection<any, any> = new Collection();
+commands.set("ping", Ping);
+commands.set("wish", Wish);
 
 export async function handleSlashCommand(
   client: Client,
   interaction: CommandInteraction
 ) {
-  const requestedCommand = commands.find(
-    (c) => c.name === interaction.commandName
-  );
+  const requestedCommand = commands.get(interaction.commandName);
 
   if (!requestedCommand) {
-    interaction.followUp({
+    await interaction.followUp({
       content: `I don't recognize the command \`${interaction.commandName}\``,
     });
 
     return;
   }
 
-  await interaction.deferReply();
-  requestedCommand.run(client, interaction);
+  await requestedCommand.execute(interaction);
 }
 
 export default commands;
