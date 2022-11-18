@@ -5,7 +5,9 @@
     "target": "es6",
     "module": "commonjs",
     "moduleResolution": "node",
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["./src/**/*"]
 }
