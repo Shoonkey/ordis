@@ -1,14 +1,5 @@
-# Editor stuff and dependencies
-.vscode/
 node_modules/
-yarn-error.log
-
-# Typescript transpiled stuff
 built/
 
-# The bot data, saved locally
-data/
-
-# secrets
-.env.development
-.env.production
+.env.*
+!.env.example
