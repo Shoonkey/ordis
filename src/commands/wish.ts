@@ -103,7 +103,7 @@ const Wish = createCommand(
       const itemName = interaction.options.get("name").value as string;
   
       let isTypeInvalid = false;
-      const itemsToAdd: WishlistItem[] = [];
+      const requestedItems: WishlistItem[] = [];
   
       switch (itemType) {
   
@@ -116,18 +116,18 @@ const Wish = createCommand(
         case "h":
         case "b":
         case "br":
-          itemsToAdd.push({ type: itemType, name: itemName });
+          requestedItems.push({ type: itemType, name: itemName });
           break;
   
         // handles salving of multiple items
         case "wf":
           ["bp", "n", "c", "s"].forEach((type: ItemType) => {
-            itemsToAdd.push({ type, name: itemName });
+            requestedItems.push({ type, name: itemName });
           });
           break;
         case "w":
           ["h", "b", "br"].forEach((type: ItemType) => {
-            itemsToAdd.push({ type, name: itemName });
+            requestedItems.push({ type, name: itemName });
           })
           break;
         
@@ -139,6 +139,27 @@ const Wish = createCommand(
         await interaction.reply(`I don't recognize the item type \`${itemType}\``);
         return;
       }
+
+      const itemsToAdd = [];
+      const itemsAlreadyInWishlist = [];
+
+      for (const requestedItem of requestedItems) {
+
+        if (
+          wishlistData[userID].find(
+            item => item.name === requestedItem.name && item.type === requestedItem.type
+          )
+        )
+          itemsAlreadyInWishlist.push(requestedItem);
+        else
+          itemsToAdd.push(requestedItem);
+ 
+      }
+
+      if (itemsToAdd.length === 0) {
+        await interaction.reply("The items you wished for are already in your wishlist.");
+        return;
+      }
   
       wishlistData[userID].push(...itemsToAdd);
       await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
@@ -147,6 +168,12 @@ const Wish = createCommand(
         "Added some items to your wishlist! Here they are:\n" +
         itemsToAdd.map(item => `- \`${formatItem(item)}\``).join("\n")
       );
+
+      if (itemsAlreadyInWishlist.length > 0)
+        await interaction.followUp(
+          "Some of the items were already in your wishlist:\n" +
+          itemsAlreadyInWishlist.map(item => `- \`${formatItem(item)}\``).join("\n")
+        );
 
     } else if (subcommand.name === "list") {
 
