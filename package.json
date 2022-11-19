@@ -4,7 +4,7 @@
   "description": "Ordis, a Warframe bot for Discord",
   "main": "src/index.ts",
   "scripts": {
-    "serve": "rm -r built/ && tsc && node built/index.js",
+    "serve": "tsc -b --clean && tsc && node built/index.js",
     "start:dev": "cross-env NODE_ENV=development npm run serve",
     "start:prod": "cross-env NODE_ENV=production npm run serve",
     "lint": "lint-staged",
