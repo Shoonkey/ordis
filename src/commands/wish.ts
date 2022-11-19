@@ -1,30 +1,29 @@
-import { Client, CommandInteraction, SlashCommandBuilder } from "discord.js";
+import fs from 'fs/promises'
+import path from 'path';
 
-import Command from "../core/models/Command";
-import Wishlist from "../shared/models/wishlist";
+import createCommand from '../core/create-command';
 
-const wishlist: Wishlist[] = [];
-
-const builder = new SlashCommandBuilder()
-builder
-  .setName('wish')
-  .setDescription("Modifies or list the user's wishlist.")
-  .addUserOption(option =>
-    option
-      .setName('type')
-      .setDescription('Type of the item')
-      .setRequired(true))
-  .addStringOption(option =>
-    option
-      .setName('name')
-      .setDescription('The item name')
-      .setRequired(true));
-
-const Wish: Command = {
-  data: builder,
-  async execute(interaction: CommandInteraction) {
+const Wish = createCommand(
+  builder => {
+    builder
+      .setName('wish')
+      .setDescription("Modifies or list the user's wishlist.")
+      .addUserOption(option =>
+        option
+          .setName('type')
+          .setDescription('Item type')
+          .setRequired(true)
+      )
+      .addStringOption(option =>
+        option
+          .setName('name')
+          .setDescription('Item name')
+          .setRequired(true)
+      );
+  },
+  async (interaction) => {
     console.log(interaction);
   }
-};
+);
 
 export default Wish;

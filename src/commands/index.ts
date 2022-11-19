@@ -1,14 +1,15 @@
-import { Client, Collection, CommandInteraction } from "discord.js";
+import { Collection, CommandInteraction } from "discord.js";
+import loadCommands from "../core/load-commands";
 
-import Ping from "./ping";
-import Wish from "./wish";
+const commandCollection: Collection<any, any> = new Collection();
 
-const commands: Collection<any, any> = new Collection();
-commands.set("ping", Ping);
-commands.set("wish", Wish);
+loadCommands()
+  .forEach(command => {
+    commandCollection.set(command.config.name, command);
+  })
 
 export async function handleSlashCommand(interaction: CommandInteraction) {
-  const requestedCommand = commands.get(interaction.commandName);
+  const requestedCommand = commandCollection.get(interaction.commandName);
 
   if (!requestedCommand) {
     await interaction.followUp({
@@ -21,4 +22,4 @@ export async function handleSlashCommand(interaction: CommandInteraction) {
   await requestedCommand.execute(interaction);
 }
 
-export default commands;
+export default commandCollection;
