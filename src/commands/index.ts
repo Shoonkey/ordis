@@ -7,10 +7,7 @@ const commands: Collection<any, any> = new Collection();
 commands.set("ping", Ping);
 commands.set("wish", Wish);
 
-export async function handleSlashCommand(
-  client: Client,
-  interaction: CommandInteraction
-) {
+export async function handleSlashCommand(interaction: CommandInteraction) {
   const requestedCommand = commands.get(interaction.commandName);
 
   if (!requestedCommand) {

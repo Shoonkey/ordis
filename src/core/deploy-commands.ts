@@ -1,19 +1,18 @@
-import { REST, Routes } from 'discord.js';
+import path from 'path';
 import fs from 'fs';
+import { REST, Routes } from 'discord.js';
 
-// and deploy your commands!
-const deployCommands = async () => {
-	const commandsPath = "./src/commands";
+export default async function deployCommands() {
+	const commandsPath = path.join(__dirname, "../commands");
 	const commands = [];
 
-	// Grab all the command files from the commands directory you created earlier
+	// Grab all the command files from the commands directory
 	const commandFiles = fs
-	.readdirSync(commandsPath)
-	.filter(file => file.endsWith('.js') && file !== 'index.js');
+		.readdirSync(commandsPath)
+		.filter(file => file.endsWith('.js') && file !== 'index.js');
 
 	// Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
 	for (const file of commandFiles) {
-		console.log(commandsPath + '/' + file)
 		const command = require(`${commandsPath}/${file}`).default;
 		commands.push(command.data.toJSON());
 	}
@@ -22,19 +21,16 @@ const deployCommands = async () => {
 	const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
 	try {
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+		console.log(`Refreshing ${commands.length} application (/) commands...`);
 
-		// The put method is used to fully refresh all commands in the guild with the current set
-		const data = await rest.put(
+		// Refresh all commands
+		await rest.put(
 			Routes.applicationCommands(process.env.CLIENT_ID),
 			{ body: commands },
 		);
 
-		console.log(`Successfully reloaded application (/) commands.`);
+		console.log("Done!");
 	} catch (error) {
-		// And of course, make sure you catch and log any errors!
 		console.error(error);
 	}
 };
-
-export default deployCommands;
