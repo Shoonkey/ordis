@@ -11,7 +11,7 @@ export default async function deployCommands() {
 	const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
 	try {
-		console.log(`Refreshing ${commandData.length} application (/) commands...`);
+		console.log(`Loading ${commandData.length} application slash command(s)...`);
 
 		// Refresh all commands
 		await rest.put(

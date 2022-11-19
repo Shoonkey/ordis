@@ -1,12 +1,12 @@
 import { Collection, CommandInteraction } from "discord.js";
+
 import loadCommands from "../core/load-commands";
 
 const commandCollection: Collection<any, any> = new Collection();
 
-loadCommands()
-  .forEach(command => {
-    commandCollection.set(command.config.name, command);
-  })
+loadCommands().forEach((command) => {
+  commandCollection.set(command.config.name, command);
+});
 
 export async function handleSlashCommand(interaction: CommandInteraction) {
   const requestedCommand = commandCollection.get(interaction.commandName);
@@ -19,7 +19,14 @@ export async function handleSlashCommand(interaction: CommandInteraction) {
     return;
   }
 
-  await requestedCommand.execute(interaction);
+  try {
+    await requestedCommand.execute(interaction);
+  } catch (e) {
+    console.error(
+      `An error ocurred when running "${interaction.commandName}". Error:`,
+      e
+    );
+  }
 }
 
 export default commandCollection;
