@@ -1,5 +1,3 @@
-import path from 'path';
-import fs from 'fs';
 import { REST, Routes } from 'discord.js';
 import loadCommands from './load-commands';
 
@@ -12,7 +10,7 @@ export default async function deployCommands() {
 
 	try {
 		console.log(`Loading ${commandData.length} application slash command(s)...`);
-
+	
 		// Refresh all commands
 		await rest.put(
 			Routes.applicationCommands(process.env.CLIENT_ID),
