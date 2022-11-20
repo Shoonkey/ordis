@@ -4,42 +4,11 @@ import path from "path";
 import isNumeric from "validator/lib/isNumeric";
 
 import createCommand from "../core/create-command";
+import formatItem from "../core/format-item";
+import labels from "../core/labels";
 import ItemType from "../core/models/ItemType";
 import WishlistData from "../core/models/WishlistData";
 import WishlistItem from "../core/models/WishlistItem";
-import Item from "../shared/models/item";
-
-function formatItem(item: Item) {
-  const getLabel = (itemType: ItemType) => {
-    switch (itemType) {
-      case "bp":
-        return "Blueprint";
-      case "n":
-        return "Neuroptics";
-      case "c":
-        return "Chassis";
-      case "s":
-        return "Systems";
-      case "h":
-        return "Handle";
-      case "b":
-        return "Blade";
-      case "br":
-        return "Barrel";
-      default:
-        throw new Error(`Invalid single item type "${itemType}"`);
-    }
-  };
-
-  const capitalizeWord = (word: string) =>
-    word[0].toUpperCase() + word.substring(1);
-  const capitalizedItemName = item.name
-    .split(" ")
-    .map(capitalizeWord)
-    .join(" ");
-
-  return `${capitalizedItemName}/${getLabel(item.type as ItemType)}`;
-}
 
 const Wish = createCommand(
   (builder) => {
@@ -47,6 +16,11 @@ const Wish = createCommand(
       .setName("wish")
       .setDescription("Modifies or list the user's wishlist.")
       .addSubcommand((builder) => {
+        const itemTypeChoices = Object.entries(labels).map(([value, name]) => ({
+          name,
+          value,
+        }));
+
         builder
           .setName("save")
           .setDescription("Save item to wishlist")
@@ -55,20 +29,7 @@ const Wish = createCommand(
               .setName("type")
               .setDescription("Item type")
               .setRequired(true)
-              .addChoices(
-                // general options
-                { name: "Blueprint", value: "bp" },
-                { name: "Warframe", value: "wf" },
-                { name: "Weapon", value: "w" },
-                // warframe options
-                { name: "Neuroptics", value: "n" },
-                { name: "Chassis", value: "c" },
-                { name: "Systems", value: "s" },
-                // weapon options
-                { name: "Handle", value: "h" },
-                { name: "Blade", value: "b" },
-                { name: "Barrel", value: "br" }
-              )
+              .addChoices(...itemTypeChoices)
           )
           .addStringOption((option) =>
             option.setName("name").setDescription("Item name").setRequired(true)
@@ -253,7 +214,9 @@ const Wish = createCommand(
             (wishlistData[userID].length > 1 ? " items " : " item ") +
             "in your wishlist currently but you requested " +
             `removing the ${
-              start === end ? `item \`#${start + 1}\`` : `range \`${start + 1}-${end + 1}\``
+              start === end
+                ? `item \`#${start + 1}\``
+                : `range \`${start + 1}-${end + 1}\``
             }`
         );
 
