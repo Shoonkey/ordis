@@ -1,5 +1,4 @@
 node_modules/
-built/
 data/
 
 .env*
