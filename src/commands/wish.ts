@@ -1,6 +1,7 @@
 import { existsSync } from "fs";
 import { writeFile, mkdir, readFile } from "fs/promises";
 import path from "path";
+import isNumeric from "validator/lib/isNumeric";
 
 import createCommand from "../core/create-command";
 import ItemType from "../core/models/ItemType";
@@ -9,9 +10,8 @@ import WishlistItem from "../core/models/WishlistItem";
 import Item from "../shared/models/item";
 
 function formatItem(item: Item) {
-
   const getLabel = (itemType: ItemType) => {
-    switch(itemType) {
+    switch (itemType) {
       case "bp":
         return "Blueprint";
       case "n":
@@ -29,13 +29,16 @@ function formatItem(item: Item) {
       default:
         throw new Error(`Invalid single item type "${itemType}"`);
     }
-  }
-  
-  const capitalizeWord = (word: string) => word[0].toUpperCase() + word.substring(1);
-  const capitalizedItemName = item.name.split(" ").map(capitalizeWord).join(" ");
+  };
+
+  const capitalizeWord = (word: string) =>
+    word[0].toUpperCase() + word.substring(1);
+  const capitalizedItemName = item.name
+    .split(" ")
+    .map(capitalizeWord)
+    .join(" ");
 
   return `${capitalizedItemName}/${getLabel(item.type as ItemType)}`;
-
 }
 
 const Wish = createCommand(
@@ -43,7 +46,7 @@ const Wish = createCommand(
     builder
       .setName("wish")
       .setDescription("Modifies or list the user's wishlist.")
-      .addSubcommand(builder => {
+      .addSubcommand((builder) => {
         builder
           .setName("save")
           .setDescription("Save item to wishlist")
@@ -71,33 +74,30 @@ const Wish = createCommand(
             option.setName("name").setDescription("Item name").setRequired(true)
           );
 
-          return builder;
+        return builder;
       })
-      .addSubcommand(builder => {
-        builder
-          .setName("list")
-          .setDescription("List your current wishlist")
+      .addSubcommand((builder) => {
+        builder.setName("list").setDescription("List your current wishlist");
 
         return builder;
       })
-      .addSubcommand(builder => {
-        builder
-          .setName("clear")
-          .setDescription("Clear your current wishlist")
+      .addSubcommand((builder) => {
+        builder.setName("clear").setDescription("Clear your current wishlist");
 
         return builder;
       })
-      .addSubcommand(builder => {
+      .addSubcommand((builder) => {
         builder
           .setName("remove")
           .setDescription("Remove items according to the given range")
           .addStringOption((option) =>
-            option.setName("range")
-            .setDescription("Range of indexes to delete (x-y)")
-            .setRequired(true)
+            option
+              .setName("range")
+              .setDescription("Range of indexes to delete (x-y)")
+              .setRequired(true)
           );
         return builder;
-      })
+      });
   },
   async (interaction) => {
     const dataFolderPath = path.join(__dirname, "../../data");
@@ -110,24 +110,22 @@ const Wish = createCommand(
 
     const wishlistData: WishlistData = JSON.parse(
       await readFile(wishlistFilePath, "utf8")
-      );
-      
+    );
+
     const userID = interaction.user.id;
 
     if (!wishlistData[userID]) wishlistData[userID] = [];
-    
-    const subcommand = interaction.options.data[0];
-    
-    if (subcommand.name === "save") {
 
+    const subcommand = interaction.options.data[0];
+
+    if (subcommand.name === "save") {
       const itemType = interaction.options.get("type").value as ItemType;
       const itemName = interaction.options.get("name").value as string;
-  
+
       let isTypeInvalid = false;
       const requestedItems: WishlistItem[] = [];
-  
+
       switch (itemType) {
-  
         // handles saving for single items
         case "w":
         case "bp":
@@ -139,7 +137,7 @@ const Wish = createCommand(
         case "br":
           requestedItems.push({ type: itemType, name: itemName });
           break;
-  
+
         // handles salving of multiple items
         case "wf":
           ["bp", "n", "c", "s"].forEach((type: ItemType) => {
@@ -149,15 +147,17 @@ const Wish = createCommand(
         case "w":
           ["h", "b", "br"].forEach((type: ItemType) => {
             requestedItems.push({ type, name: itemName });
-          })
+          });
           break;
-        
+
         default:
           isTypeInvalid = true;
       }
-  
+
       if (isTypeInvalid) {
-        await interaction.reply(`I don't recognize the item type \`${itemType}\``);
+        await interaction.reply(
+          `I don't recognize the item type \`${itemType}\``
+        );
         return;
       }
 
@@ -165,81 +165,111 @@ const Wish = createCommand(
       const itemsAlreadyInWishlist = [];
 
       for (const requestedItem of requestedItems) {
-
         if (
-          wishlistData[userID].find(item => {
-            return  item.name.toLowerCase() === requestedItem.name.toLowerCase() && 
-                    item.type === requestedItem.type;
+          wishlistData[userID].find((item) => {
+            return (
+              item.name.toLowerCase() === requestedItem.name.toLowerCase() &&
+              item.type === requestedItem.type
+            );
           })
         )
           itemsAlreadyInWishlist.push(requestedItem);
-        else
-          itemsToAdd.push(requestedItem);
- 
+        else itemsToAdd.push(requestedItem);
       }
 
       if (itemsToAdd.length === 0) {
-        await interaction.reply("The items you wished for are already in your wishlist.");
+        await interaction.reply(
+          "The items you wished for are already in your wishlist."
+        );
         return;
       }
-  
+
       wishlistData[userID].push(...itemsToAdd);
       await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
-  
+
       await interaction.reply(
         "Added some items to your wishlist! Here they are:\n" +
-        itemsToAdd.map(item => `- \`${formatItem(item)}\``).join("\n")
+          itemsToAdd.map((item) => `- \`${formatItem(item)}\``).join("\n")
       );
 
       if (itemsAlreadyInWishlist.length > 0)
         await interaction.followUp(
           "Some of the items were already in your wishlist:\n" +
-          itemsAlreadyInWishlist.map(item => `- \`${formatItem(item)}\``).join("\n")
+            itemsAlreadyInWishlist
+              .map((item) => `- \`${formatItem(item)}\``)
+              .join("\n")
         );
-
     } else if (subcommand.name === "list") {
       const items = wishlistData[userID]
-        .map(item => `- \`${formatItem(item)}\``)
+        .map((item) => `- \`${formatItem(item)}\``)
         .join("\n");
-      
+
       if (items === "") {
-        await interaction.reply("Operator, your wishlist is just like a Grineer head... Empty!");
+        await interaction.reply(
+          "Operator, your wishlist is just like a Grineer head... Empty!"
+        );
         return;
       }
 
-      await interaction.reply(
-        "Here's your wishlist, operator:\n" + items
-      );
-
+      await interaction.reply("Here's your wishlist, Operator:\n" + items);
     } else if (subcommand.name === "clear") {
       wishlistData[userID] = [];
       await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
       await interaction.reply("WisHLIsT PurgED, OpErAtor.");
-
     } else if (subcommand.name === "remove") {
-      const range = interaction.options.get("type").value as string;
-      const rangeSplitted = range.split("-");
+      const range = interaction.options.get("range").value as string;
 
-      if (rangeSplitted.length === 1) {
-        wishlistData[userID] = wishlistData[userID]
-          .splice(Number(rangeSplitted[0]), 1);
+      const [startStr, endStr] = range.split("-");
 
-        await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
-        await interaction.reply("Item thrown to space, operator.");
+      if (!isNumeric(startStr) || (endStr && !isNumeric(endStr))) {
+        await interaction.reply(
+          "Your range seems... weird, Operator. I couldn't parse it properly."
+        );
         return;
       }
 
-      const start = Number(rangeSplitted[0]);
-      const numberOfItems = Number(rangeSplitted[1]) - start;
+      // If inputted n for start or end, true value is n - 1 due to indexing starting at 0
+      const start = parseInt(startStr, 10) - 1;
+      const end = endStr ? parseInt(endStr, 10) - 1 : start;
 
-      wishlistData[userID] = wishlistData[userID]
-        .splice(start, numberOfItems);
+      if (start > end) {
+        await interaction.reply(
+          `I don't think you really meant the range \`${start + 1}-${
+            end + 1
+          }\`, Operator. ` +
+            "How am I supposed to start deleting after the range end?"
+        );
 
+        return;
+      }
+
+      if (
+        start >= wishlistData[userID].length ||
+        end >= wishlistData[userID].length
+      ) {
+        await interaction.reply(
+          "Your range seems a bit odd, Operator. You only have " +
+            wishlistData[userID].length +
+            (wishlistData[userID].length > 1 ? " items " : " item ") +
+            "in your wishlist currently but you requested " +
+            `removing the ${
+              start === end ? `item \`#${start + 1}\`` : `range \`${start + 1}-${end + 1}\``
+            }`
+        );
+
+        return;
+      }
+
+      wishlistData[userID].splice(start, end - start + 1);
       await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
-      await interaction.reply("Items discarded successfully. May I discard these old argons too?");
 
+      if (start === end)
+        await interaction.reply(`Item thrown to space, operator.`);
+      else
+        await interaction.reply(
+          "Items discarded successfully. May I discard these old argons too?"
+        );
     }
-
   }
 );
 

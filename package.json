@@ -47,6 +47,7 @@
   "dependencies": {
     "cross-env": "^7.0.3",
     "discord.js": "^14.6.0",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "validator": "^13.7.0"
   }
 }
