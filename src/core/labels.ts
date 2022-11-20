@@ -13,8 +13,6 @@ const labels = {
   "r": "Relic",
   "rs": "Resource",
   "s": "Sentinel",
-  "sdec": "Ship decoration",
-  "sseg": "Ship segment",
   "sy": "Syandana",
   "w": "Weapon",
   "wf": "Warframe",
@@ -26,7 +24,9 @@ const labels = {
   // Weapon
   "h": "Handle",
   "b": "Blade",
-  "br": "Barrel"
+  "br": "Barrel",
+  // Other
+  "o": "Other"
 }
 
 export default labels;
