@@ -30,8 +30,11 @@ function formatItem(item: Item) {
         throw new Error(`Invalid single item type "${itemType}"`);
     }
   }
+  
+  const capitalizeWord = (word: string) => word[0].toUpperCase() + word.substring(1);
+  const capitalizedItemName = item.name.split(" ").map(capitalizeWord).join(" ");
 
-  return `${item.name}/${getLabel(item.type as ItemType)}`;
+  return `${capitalizedItemName}/${getLabel(item.type as ItemType)}`;
 
 }
 
@@ -146,9 +149,10 @@ const Wish = createCommand(
       for (const requestedItem of requestedItems) {
 
         if (
-          wishlistData[userID].find(
-            item => item.name === requestedItem.name && item.type === requestedItem.type
-          )
+          wishlistData[userID].find(item => {
+            return  item.name.toLowerCase() === requestedItem.name.toLowerCase() && 
+                    item.type === requestedItem.type;
+          })
         )
           itemsAlreadyInWishlist.push(requestedItem);
         else
