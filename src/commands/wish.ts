@@ -77,6 +77,13 @@ const Wish = createCommand(
 
         return builder;
       })
+      .addSubcommand(builder => {
+        builder
+          .setName("clear")
+          .setDescription("Clear your current wishlist")
+
+        return builder;
+      })
   },
   async (interaction) => {
     const dataFolderPath = path.join(__dirname, "../../data");
@@ -176,14 +183,24 @@ const Wish = createCommand(
         );
 
     } else if (subcommand.name === "list") {
+      const items = wishlistData[userID]
+        .map(item => `- \`${formatItem(item)}\``)
+        .join("\n");
+      
+      if (items === "") {
+        await interaction.reply("Your wishlist is empty =D");
+        return;
+      }
 
       await interaction.reply(
-        "Here's your wishlist:\n" +
-        wishlistData[userID].map(item => `- \`${formatItem(item)}\``).join("\n")
+        "Here's your wishlist:\n" + items
       );
 
+    } else if (subcommand.name === "clear") {
+      wishlistData[userID] = [];
+      await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
+      await interaction.reply("Wishlist cleared!");
     }
-    
 
   }
 );
