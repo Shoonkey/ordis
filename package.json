@@ -7,6 +7,9 @@
     "serve": "ts-node src/index.ts",
     "start:dev": "cross-env NODE_ENV=development npm run serve",
     "start:prod": "cross-env NODE_ENV=production npm run serve",
+    "deploy-commands": "ts-node src/deploy-commands.ts",
+    "deploy-commands:dev": "cross-env NODE_ENV=development npm run deploy-commands",
+    "deploy-commands:prod": "cross-env NODE_ENV=production npm run deploy-commands",
     "lint": "lint-staged",
     "lint-fix": "eslint --fix",
     "prettier": "prettier --write ."

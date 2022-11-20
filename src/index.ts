@@ -2,7 +2,7 @@ import { config as loadEnvironment } from "dotenv";
 import { Client, Events, GatewayIntentBits } from "discord.js";
 
 import { handleSlashCommand } from "./commands";
-import deployCommands from "./core/deploy-commands";
+import deployCommands from "./deploy-commands";
 
 loadEnvironment();
 deployCommands();
