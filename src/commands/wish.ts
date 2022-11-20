@@ -87,6 +87,17 @@ const Wish = createCommand(
 
         return builder;
       })
+      .addSubcommand(builder => {
+        builder
+          .setName("remove")
+          .setDescription("Remove items according to the given range")
+          .addStringOption((option) =>
+            option.setName("range")
+            .setDescription("Range of indexes to delete (x-y)")
+            .setRequired(true)
+          );
+        return builder;
+      })
   },
   async (interaction) => {
     const dataFolderPath = path.join(__dirname, "../../data");
@@ -192,18 +203,41 @@ const Wish = createCommand(
         .join("\n");
       
       if (items === "") {
-        await interaction.reply("Your wishlist is empty =D");
+        await interaction.reply("Operator, your wishlist is just like a Grineer head... Empty!");
         return;
       }
 
       await interaction.reply(
-        "Here's your wishlist:\n" + items
+        "Here's your wishlist, operator:\n" + items
       );
 
     } else if (subcommand.name === "clear") {
       wishlistData[userID] = [];
       await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
-      await interaction.reply("Wishlist cleared!");
+      await interaction.reply("WisHLIsT PurgED, OpErAtor.");
+
+    } else if (subcommand.name === "remove") {
+      const range = interaction.options.get("type").value as string;
+      const rangeSplitted = range.split("-");
+
+      if (rangeSplitted.length === 1) {
+        wishlistData[userID] = wishlistData[userID]
+          .splice(Number(rangeSplitted[0]), 1);
+
+        await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
+        await interaction.reply("Item thrown to space, operator.");
+        return;
+      }
+
+      const start = Number(rangeSplitted[0]);
+      const numberOfItems = Number(rangeSplitted[1]) - start;
+
+      wishlistData[userID] = wishlistData[userID]
+        .splice(start, numberOfItems);
+
+      await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
+      await interaction.reply("Items discarded successfully. May I discard these old argons too?");
+
     }
 
   }
