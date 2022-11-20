@@ -63,7 +63,7 @@ const Wish = createCommand(
                 // warframe options
                 { name: "Neuroptics", value: "n" },
                 { name: "Chassis", value: "c" },
-                { name: "System", value: "s" },
+                { name: "Systems", value: "s" },
                 // weapon options
                 { name: "Handle", value: "h" },
                 { name: "Blade", value: "b" },
