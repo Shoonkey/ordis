@@ -2,10 +2,8 @@ import { config as loadEnvironment } from "dotenv";
 import { Client, Events, GatewayIntentBits } from "discord.js";
 
 import { handleSlashCommand } from "./commands";
-import deployCommands from "./deploy-commands";
 
 loadEnvironment();
-deployCommands();
 
 // Create a new client instance
 const client = new Client({
