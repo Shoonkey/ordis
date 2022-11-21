@@ -83,53 +83,21 @@ const Wish = createCommand(
       const itemType = interaction.options.get("type").value as ItemType;
       const itemName = interaction.options.get("name").value as string;
 
-      let isTypeInvalid = false;
       const requestedItems: WishlistItem[] = [];
 
-      switch (itemType) {
-        // handles saving for single items
-        case "a":
-        case "aw":
-        case "bp":
-        case "g":
-        case "kd":
-        case "kg":
-        case "kgc":
-        case "l":
-        case "m":
-        case "p":
-        case "r":
-        case "rs":
-        case "s":
-        case "sy":
-        case "z":
-        case "n":
-        case "c":
-        case "sys":
-        case "h":
-        case "b":
-        case "br":
-        case "o":
-          requestedItems.push({ type: itemType, name: itemName });
-          break;
-
-        // handles salving of multiple items
-        case "wf":
-          ["bp", "n", "c", "s"].forEach((type: ItemType) => {
-            requestedItems.push({ type, name: itemName });
-          });
-          break;
-
-        default:
-          isTypeInvalid = true;
-      }
-
-      if (isTypeInvalid) {
+      if (!labels[itemType]) {
         await interaction.reply(
           `I don't recognize the item type \`${itemType}\``
         );
         return;
       }
+
+      if (itemType === "wf")
+        ["bp", "n", "c", "s"].forEach((type: ItemType) => {
+          requestedItems.push({ type, name: itemName });
+        });
+      else
+        requestedItems.push({ type: itemType, name: itemName });
 
       const itemsToAdd = [];
       const itemsAlreadyInWishlist = [];
