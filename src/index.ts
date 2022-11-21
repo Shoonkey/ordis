@@ -14,7 +14,7 @@ const client = new Client({
 client.login(process.env.TOKEN);
 
 client.on(Events.ClientReady, ({ user }) => {
-  console.log(`Ready! Logged in as ${user.tag}`);
+  console.log(`[${process.env.NODE_ENV}] Ready! Logged in as ${user.tag}`);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

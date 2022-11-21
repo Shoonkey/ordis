@@ -8,6 +8,8 @@ loadEnvironment();
 async function deployCommands() {
   if (!process.env.CLIENT_ID)
     throw new Error("Client ID not found in environment file");
+  if (!process.env.GUILD_ID)
+  throw new Error("Guild ID not found in environment file");
 
   const commandData = loadCommands().map((command) => command.config.toJSON());
 
@@ -31,6 +33,15 @@ async function deployCommands() {
         { body: commandData }
       );
     } else {
+      // Clear guild commands so that there is no duplicates
+      await rest.put(
+        Routes.applicationGuildCommands(
+          process.env.CLIENT_ID,
+          process.env.GUILD_ID
+        ),
+        { body: [] }
+      );
+
       // Refresh commands in all servers bot is in
       await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
         body: commandData,
