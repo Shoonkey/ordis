@@ -14,7 +14,6 @@ const labels = {
   "rs": "Resource",
   "s": "Sentinel",
   "sy": "Syandana",
-  "w": "Weapon",
   "wf": "Warframe",
   "z": "Zaw",
   // Warframe

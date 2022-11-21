@@ -88,25 +88,34 @@ const Wish = createCommand(
 
       switch (itemType) {
         // handles saving for single items
-        case "w":
+        case "a":
+        case "aw":
         case "bp":
+        case "g":
+        case "kd":
+        case "kg":
+        case "kgc":
+        case "l":
+        case "m":
+        case "p":
+        case "r":
+        case "rs":
+        case "s":
+        case "sy":
+        case "z":
         case "n":
         case "c":
-        case "s":
+        case "sys":
         case "h":
         case "b":
         case "br":
+        case "o":
           requestedItems.push({ type: itemType, name: itemName });
           break;
 
         // handles salving of multiple items
         case "wf":
           ["bp", "n", "c", "s"].forEach((type: ItemType) => {
-            requestedItems.push({ type, name: itemName });
-          });
-          break;
-        case "w":
-          ["h", "b", "br"].forEach((type: ItemType) => {
             requestedItems.push({ type, name: itemName });
           });
           break;
