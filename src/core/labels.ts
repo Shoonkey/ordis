@@ -6,7 +6,6 @@ const labels = {
   "g": "Glyph",
   "kd": "K-Drive",
   "kg": "Kitgun",
-  "kgc": "Kitgun component",
   "l": "Lens",
   "m": "Mod",
   "p": "Pet",
@@ -24,6 +23,9 @@ const labels = {
   "h": "Handle",
   "b": "Blade",
   "br": "Barrel",
+  "po": "Pouch",
+  "rec": "Receiver",
+  "st": "Stock",
   // Other
   "o": "Other"
 }
