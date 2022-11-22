@@ -88,7 +88,7 @@ const Wish = createCommand(
       if (!labels[itemType]) {
         await interaction.reply(
           `I don't recognize the item type \`${itemType}\``
-        );
+        );asdfasdf
         return;
       }
 
