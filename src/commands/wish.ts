@@ -93,7 +93,7 @@ const Wish = createCommand(
       }
 
       if (itemType === "wf")
-        ["bp", "n", "c", "s"].forEach((type: ItemType) => {
+        ["bp", "n", "c", "sys"].forEach((type: ItemType) => {
           requestedItems.push({ type, name: itemName });
         });
       else
