@@ -1,8 +1,8 @@
 import WarframeStatus from "../core/api/WarframeStatus";
 import createCommand from "../core/create-command";
 
-const WorldState = createCommand(
-  builder => {
+const WorldState = createCommand({
+  configureBuilder(builder) {
     builder
       .setName("worldstate")
       .setDescription("Get information about the Warframe world's state")
@@ -30,11 +30,7 @@ const WorldState = createCommand(
           )
       )
   },
-  async interaction => {
-
-    if (!interaction.isChatInputCommand())
-      return;
-
+  async execute(interaction) {
     const platform = interaction.options.getString("platform");
     const world = interaction.options.getString("world");
 
@@ -66,6 +62,6 @@ const WorldState = createCommand(
     }
 
   }
-)
+})
 
 export default WorldState;

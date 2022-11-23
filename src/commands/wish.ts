@@ -1,7 +1,5 @@
-import { existsSync } from "fs";
-import { writeFile, mkdir, readFile } from "fs/promises";
-import path from "path";
 import isNumeric from "validator/lib/isNumeric";
+import WFItems from "warframe-items";
 
 import createCommand from "../core/create-command";
 import formatItem from "../core/format-item";
@@ -9,9 +7,10 @@ import labels from "../core/labels";
 import ItemType from "../core/models/ItemType";
 import WishlistData from "../core/models/WishlistData";
 import WishlistItem from "../core/models/WishlistItem";
+import { getDataContent, setDataContent } from "../core/use-data-folder";
 
-const Wish = createCommand(
-  (builder) => {
+const Wish = createCommand({
+  configureBuilder(builder) {
     builder
       .setName("wish")
       .setDescription("Modifies or list the user's wishlist.")
@@ -32,22 +31,22 @@ const Wish = createCommand(
               .addChoices(...itemTypeChoices)
           )
           .addStringOption((option) =>
-            option.setName("name").setDescription("Item name").setRequired(true)
+            option
+              .setName("name")
+              .setDescription("Item name")
+              .setRequired(true)
+              .setAutocomplete(true)
           );
 
         return builder;
       })
-      .addSubcommand((builder) => {
-        builder.setName("list").setDescription("List your current wishlist");
-
-        return builder;
-      })
-      .addSubcommand((builder) => {
-        builder.setName("clear").setDescription("Clear your current wishlist");
-
-        return builder;
-      })
-      .addSubcommand((builder) => {
+      .addSubcommand((builder) =>
+        builder.setName("list").setDescription("List your current wishlist")
+      )
+      .addSubcommand((builder) =>
+        builder.setName("clear").setDescription("Clear your current wishlist")
+      )
+      .addSubcommand((builder) =>
         builder
           .setName("remove")
           .setDescription("Remove items according to the given range")
@@ -56,25 +55,18 @@ const Wish = createCommand(
               .setName("range")
               .setDescription("Range of indexes to delete (x-y)")
               .setRequired(true)
-          );
-        return builder;
-      });
+          )
+      );
   },
-  async (interaction) => {
-    if (!interaction.isChatInputCommand())
+  async execute(interaction) {
+    let wishlistData: WishlistData;
+
+    try {
+      wishlistData = (await getDataContent("wishlists")) as WishlistData;
+    } catch (e) {
+      await interaction.reply(e.message);
       return;
-
-    const dataFolderPath = path.join(__dirname, "../../data");
-    const wishlistFilePath = `${dataFolderPath}/wishlists.json`;
-
-    // Ensure data folder exists and wishlist file is in it
-    if (!existsSync(dataFolderPath)) await mkdir(dataFolderPath);
-    if (!existsSync(wishlistFilePath))
-      await writeFile(wishlistFilePath, "{}", "utf8");
-
-    const wishlistData: WishlistData = JSON.parse(
-      await readFile(wishlistFilePath, "utf8")
-    );
+    }
 
     const userID = interaction.user.id;
 
@@ -99,8 +91,7 @@ const Wish = createCommand(
         ["bp", "n", "c", "sys"].forEach((type: ItemType) => {
           requestedItems.push({ type, name: itemName });
         });
-      else
-        requestedItems.push({ type: itemType, name: itemName });
+      else requestedItems.push({ type: itemType, name: itemName });
 
       const itemsToAdd = [];
       const itemsAlreadyInWishlist = [];
@@ -126,7 +117,13 @@ const Wish = createCommand(
       }
 
       wishlistData[userID].push(...itemsToAdd);
-      await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
+
+      try {
+        await setDataContent("wishlists", wishlistData);
+      } catch (e) {
+        await interaction.reply(e.message);
+        return;
+      }
 
       await interaction.reply(
         "Added some items to your wishlist! Here they are:\n" +
@@ -155,7 +152,14 @@ const Wish = createCommand(
       await interaction.reply("Here's your wishlist, Operator:\n" + items);
     } else if (subcommand === "clear") {
       wishlistData[userID] = [];
-      await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
+
+      try {
+        await setDataContent("wishlists", wishlistData);
+      } catch (e) {
+        await interaction.reply(e.message);
+        return;
+      }
+
       await interaction.reply("WisHLIsT PurgED, OpErAtor.");
     } else if (subcommand === "remove") {
       const range = interaction.options.getString("range");
@@ -204,7 +208,13 @@ const Wish = createCommand(
       }
 
       wishlistData[userID].splice(start, end - start + 1);
-      await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
+
+      try {
+        await setDataContent("wishlists", wishlistData);
+      } catch (e) {
+        await interaction.reply(e.message);
+        return;
+      }
 
       if (start === end)
         await interaction.reply(`Item thrown to space, operator.`);
@@ -213,7 +223,62 @@ const Wish = createCommand(
           "Items discarded successfully. May I discard these old argons too?"
         );
     }
-  }
-);
+  },
+  async autocomplete(interaction) {
+    const focusedAutocompleteOption = interaction.options.getFocused(true);
+
+    if (focusedAutocompleteOption.name === "name") {
+
+      // TODO: compute category to filter items by from type, if there is any at the moment
+      // This depends on the lib exporting their types to be done properly, which is currently
+      // pending (https://github.com/WFCD/warframe-items/issues/392)
+      const type = interaction.options.getString("type") as ItemType;
+
+      try {
+        const items = new WFItems({
+          category: [
+            "Arcanes",
+            "Archwing",
+            "Arch-Gun",
+            "Arch-Melee",
+            "Fish",
+            "Gear",
+            "Melee",
+            "Misc",
+            "Mods",
+            "Node",
+            "Pets",
+            "Primary",
+            "Relics",
+            "Resources",
+            "Secondary",
+            "Sentinels",
+            "SentinelWeapons",
+            "Skins",
+            "Warframes"
+          ],
+        });
+
+        // ! Respect Discord's option limit, which is 25 at a time
+        const MAX_RESULT_COUNT = 25;
+        const results = [];
+
+        const lowercaseOptionValue = focusedAutocompleteOption.value.toLowerCase();
+
+        for (const item of items) {
+          if (item.name.toLowerCase().includes(lowercaseOptionValue))
+            results.push({ name: item.name, value: item.name });
+          
+          if (results.length === MAX_RESULT_COUNT)
+            break;
+        }
+        
+        await interaction.respond(results);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  },
+});
 
 export default Wish;
