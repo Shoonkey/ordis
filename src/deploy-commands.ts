@@ -1,15 +1,16 @@
+import path from "path";
 import { config as loadEnvironment } from "dotenv";
 import { REST, Routes } from "discord.js";
 
 import loadCommands from "./core/load-commands";
 
-loadEnvironment();
+loadEnvironment({
+  path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`)
+});
 
 async function deployCommands() {
   if (!process.env.CLIENT_ID)
     throw new Error("Client ID not found in environment file");
-  if (!process.env.GUILD_ID)
-  throw new Error("Guild ID not found in environment file");
 
   const commandData = loadCommands().map((command) => command.config.toJSON());
 
@@ -17,7 +18,6 @@ async function deployCommands() {
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
   try {
-
     if (process.env.NODE_ENV === "development") {
       if (!process.env.GUILD_ID)
         throw new Error(
@@ -33,15 +33,6 @@ async function deployCommands() {
         { body: commandData }
       );
     } else {
-      // Clear guild commands so that there is no duplicates
-      await rest.put(
-        Routes.applicationGuildCommands(
-          process.env.CLIENT_ID,
-          process.env.GUILD_ID
-        ),
-        { body: [] }
-      );
-
       // Refresh commands in all servers bot is in
       await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
         body: commandData,
