@@ -32,8 +32,11 @@ const WorldState = createCommand(
   },
   async interaction => {
 
-    const platform = interaction.options.get("platform").value as string;
-    const world = interaction.options.get("world").value as string;
+    if (!interaction.isChatInputCommand())
+      return;
+
+    const platform = interaction.options.getString("platform");
+    const world = interaction.options.getString("world");
 
     const capitalize = (word: string) => word[0].toUpperCase() + word.substring(1);
 

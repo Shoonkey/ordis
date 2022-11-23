@@ -61,6 +61,9 @@ const Wish = createCommand(
       });
   },
   async (interaction) => {
+    if (!interaction.isChatInputCommand())
+      return;
+
     const dataFolderPath = path.join(__dirname, "../../data");
     const wishlistFilePath = `${dataFolderPath}/wishlists.json`;
 
@@ -77,11 +80,11 @@ const Wish = createCommand(
 
     if (!wishlistData[userID]) wishlistData[userID] = [];
 
-    const subcommand = interaction.options.data[0];
+    const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand.name === "save") {
-      const itemType = interaction.options.get("type").value as ItemType;
-      const itemName = interaction.options.get("name").value as string;
+    if (subcommand === "save") {
+      const itemType = interaction.options.getString("type") as ItemType;
+      const itemName = interaction.options.getString("name");
 
       const requestedItems: WishlistItem[] = [];
 
@@ -137,7 +140,7 @@ const Wish = createCommand(
               .map((item) => `- \`${formatItem(item)}\``)
               .join("\n")
         );
-    } else if (subcommand.name === "list") {
+    } else if (subcommand === "list") {
       const items = wishlistData[userID]
         .map((item) => `- \`${formatItem(item)}\``)
         .join("\n");
@@ -150,12 +153,12 @@ const Wish = createCommand(
       }
 
       await interaction.reply("Here's your wishlist, Operator:\n" + items);
-    } else if (subcommand.name === "clear") {
+    } else if (subcommand === "clear") {
       wishlistData[userID] = [];
       await writeFile(wishlistFilePath, JSON.stringify(wishlistData), "utf8");
       await interaction.reply("WisHLIsT PurgED, OpErAtor.");
-    } else if (subcommand.name === "remove") {
-      const range = interaction.options.get("range").value as string;
+    } else if (subcommand === "remove") {
+      const range = interaction.options.getString("range");
 
       const [startStr, endStr] = range.split("-");
 
