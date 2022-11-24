@@ -1,6 +1,11 @@
-import { SlashCommandBuilder, CommandInteraction } from "discord.js";
+import {
+  SlashCommandBuilder,
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+} from "discord.js";
 
 export default interface Command {
   config: SlashCommandBuilder;
-  execute: (interaction: CommandInteraction) => Promise<void>;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }

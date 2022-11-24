@@ -1,13 +1,29 @@
-import { CommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 
 import Command from "./models/Command";
 
-export default function createCommand(
-  configureBuilder: (builder: SlashCommandBuilder) => void, 
-  execute: (interaction: CommandInteraction) => Promise<void>
-): Command {
+interface CreateCommandProps {
+  configureBuilder: (builder: SlashCommandBuilder) => void;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
+}
+
+export default function createCommand({
+  configureBuilder,
+  execute,
+  autocomplete
+}: CreateCommandProps): Command {
   const builder = new SlashCommandBuilder();
   configureBuilder(builder);
 
-  return { config: builder, execute };
+  const command: Command = { config: builder, execute };
+
+  if (autocomplete)
+    command.autocomplete = autocomplete;
+
+  return command;
 }

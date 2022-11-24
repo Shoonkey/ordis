@@ -4,7 +4,7 @@ This is a bot designed to help Warframe players keep track of stuff, like the it
 
 ## Running the project
 
-To start, it is important that you set up both the application in the [Discord application tab](https://discord.com/developers/applications) and your environment in a `.env` file as described in `.env.example`, in the same directory. You will need to define a token, client ID and guild ID, which you can find in the official Discord application for your bot.
+To start, it is important that you set up both the application in the [Discord application tab](https://discord.com/developers/applications) and your environment in a `.env.development` or `.env.production` file as described in `.env.example`, in the same directory. You will need to define a token and client ID, which you can find in the official Discord application for your bot. You'll may also need a guild ID for development mode.
 
 Then, to run this project you will need Node (currently using version 18.x.x; different major versions may result in errors) and NPM to be installed. Then, you can install the project dependencies by running this in the terminal:
 
