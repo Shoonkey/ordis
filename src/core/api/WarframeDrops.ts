@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
-import Drop from "../models/Drop";
+import DropAcquisitionType from "../models/DropAcquisitionType";
 import APIError from "./APIError";
 
 interface BaseReward {
@@ -27,7 +27,7 @@ interface MissionRewardData {
       gameMode: string;
       isEvent: boolean;
       rewards: {
-        [rewardKey: string]: ItemReward;
+        [rewardKey: string]: ItemReward[] | ItemReward;
       };
     };
   };
@@ -121,8 +121,27 @@ interface AllDropData {
   relics: RelicRewardData[];
 }
 
+interface ResultData {
+  [acquirableThrough: string]: {
+    [rewardName: string]: {
+      [dropChanceString: string]: {
+        [dropNodeName: string]: string[];
+      };
+    }
+  };
+}
+
+interface DropData {
+  acquirableThrough: DropAcquisitionType;
+  rewardName: string;
+  dropChance: number;
+  dropNodeName?: string;
+  description?: string;
+}
+
 class WarframeDrops {
   private axiosInstance: AxiosInstance;
+  private filterBy: DropAcquisitionType;
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -130,10 +149,41 @@ class WarframeDrops {
     });
   }
 
+  setFilter(filterBy: DropAcquisitionType) {
+    this.filterBy = filterBy;
+  }
+
   async getItemDropLocation(item: string) {
     try {
       const dropDataResponse = await this.axiosInstance.get("/data/all.json");
-      const drops: Drop[] = [];
+      const drops: ResultData = {};
+
+      const addDropLocation = ({
+        acquirableThrough,
+        rewardName,
+        dropChance,
+        dropNodeName,
+        description
+      }: DropData) => {
+        if (!drops[acquirableThrough])
+          drops[acquirableThrough] = {};
+
+        if (!drops[acquirableThrough][rewardName])
+          drops[acquirableThrough][rewardName] = {};
+
+        const dropChanceStr = dropChance.toString();
+
+        if (!drops[acquirableThrough][rewardName][dropChanceStr]) 
+          drops[acquirableThrough][rewardName][dropChanceStr] = {};
+        
+        if (!dropNodeName)
+          dropNodeName = "Other";
+        
+        if (!drops[acquirableThrough][rewardName][dropChance][dropNodeName])
+          drops[acquirableThrough][rewardName][dropChance][dropNodeName] = [];
+
+        drops[acquirableThrough][rewardName][dropChanceStr][dropNodeName].push(description);
+      };
 
       const dropData = dropDataResponse.data as AllDropData;
       const lowercaseItem = item.toLowerCase();
@@ -153,9 +203,9 @@ class WarframeDrops {
         if (!looksLikeItem(item.itemName)) continue;
 
         for (const enemy of item.enemies)
-          drops.push({
+          addDropLocation({
             acquirableThrough: "enemy",
-            itemName: item.itemName,
+            rewardName: item.itemName,
             dropChance: enemy.enemyItemDropChance,
             description: enemy.enemyName,
           });
@@ -167,9 +217,9 @@ class WarframeDrops {
         if (!looksLikeItem(mod.modName)) continue;
 
         for (const enemy of mod.enemies) {
-          drops.push({
+          addDropLocation({
             acquirableThrough: "enemy",
-            itemName: mod.modName,
+            rewardName: mod.modName,
             dropChance: enemy.enemyModDropChance,
             description: enemy.enemyName,
           });
@@ -182,23 +232,33 @@ class WarframeDrops {
         for (const [missionNode, missionNodeData] of Object.entries(
           planetRewards
         )) {
-          for (const reward of Object.values(missionNodeData.rewards)) {
-            if (looksLikeItem(reward.itemName))
-              drops.push({
-                acquirableThrough: "planetNode",
-                itemName: reward.itemName,
-                dropChance: reward.chance,
-                description: `${missionNode} (${planet})`,
-              });
+          for (const rewards of Object.values(missionNodeData.rewards)) {
+            let rewardArray: ItemReward[];
+
+            // Rewards sometimes isn't array, it may come as a single item object
+            if (!Array.isArray(rewards)) rewardArray = [rewards];
+            else rewardArray = rewards;
+
+            for (const reward of rewardArray) {
+              if (looksLikeItem(reward.itemName)) {
+                addDropLocation({
+                  acquirableThrough: "planetNode",
+                  rewardName: reward.itemName,
+                  dropChance: reward.chance,
+                  dropNodeName: planet,
+                  description: `${missionNode}`,
+                });
+              }
+            }
           }
         }
       }
 
       for (const reward of dropData.sortieRewards) {
         if (looksLikeItem(reward.itemName))
-          drops.push({
+          addDropLocation({
             acquirableThrough: "sortie",
-            itemName: reward.itemName,
+            rewardName: reward.itemName,
             dropChance: reward.chance,
           });
       }
@@ -206,11 +266,11 @@ class WarframeDrops {
       for (const objective of dropData.transientRewards) {
         for (const reward of objective.rewards)
           if (looksLikeItem(reward.itemName))
-            drops.push({
+            addDropLocation({
               acquirableThrough: "objective",
-              itemName: reward.itemName,
+              rewardName: reward.itemName,
               dropChance: reward.chance,
-              description: objective.objectiveName,
+              description: objective.objectiveName
             });
       }
 
@@ -218,11 +278,12 @@ class WarframeDrops {
         for (const rewards of Object.values(bounty.rewards))
           for (const reward of rewards)
             if (looksLikeItem(reward.itemName))
-              drops.push({
+              addDropLocation({
                 acquirableThrough: "bounty",
-                itemName: reward.itemName,
+                rewardName: reward.itemName,
                 dropChance: reward.chance,
-                description: `${bounty.bountyLevel} (Cetus)`,
+                dropNodeName: "Cetus",
+                description: `${bounty.bountyLevel}`
               });
       }
 
@@ -230,11 +291,12 @@ class WarframeDrops {
         for (const rewards of Object.values(bounty.rewards))
           for (const reward of rewards)
             if (looksLikeItem(reward.itemName))
-              drops.push({
+              addDropLocation({
                 acquirableThrough: "bounty",
-                itemName: reward.itemName,
+                rewardName: reward.itemName,
                 dropChance: reward.chance,
-                description: `${bounty.bountyLevel} (Fortuna)`,
+                dropNodeName: "Fortuna",
+                description: `${bounty.bountyLevel}`
               });
       }
 
@@ -242,22 +304,23 @@ class WarframeDrops {
         for (const rewards of Object.values(bounty.rewards))
           for (const reward of rewards)
             if (looksLikeItem(reward.itemName))
-              drops.push({
+              addDropLocation({
                 acquirableThrough: "bounty",
-                itemName: reward.itemName,
+                rewardName: reward.itemName,
                 dropChance: reward.chance,
-                description: `${bounty.bountyLevel} (Deimos)`,
+                dropNodeName: "Deimos",
+                description: `${bounty.bountyLevel}`
               });
       }
 
       for (const relic of dropData.relics) {
         for (const reward of relic.rewards) {
           if (looksLikeItem(reward.itemName))
-            drops.push({
+            addDropLocation({
               acquirableThrough: "relic",
-              itemName: reward.itemName,
+              rewardName: reward.itemName,
               dropChance: reward.chance,
-              description: `${relic.tier} ${relic.relicName} (${relic.state})`,
+              description: `${relic.tier} ${relic.relicName} (${relic.state})`
             });
         }
       }
