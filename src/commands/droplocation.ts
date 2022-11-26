@@ -45,8 +45,6 @@ const WorldState = createCommand({
         .split(",")
         .map((filter) => filter.replace(/\s+/g, ""));
 
-      console.log("Parsed filters:", JSON.stringify(parsedFilters));
-
       const filterChoices = [
         "enemy",
         "planetNode",
