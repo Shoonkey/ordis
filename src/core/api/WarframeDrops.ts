@@ -141,16 +141,19 @@ interface DropData {
 
 class WarframeDrops {
   private axiosInstance: AxiosInstance;
-  private filterBy: DropAcquisitionType;
+  private filters: DropAcquisitionType[] | null;
 
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: "https://drops.warframestat.us",
     });
+
+    this.filters = null;
   }
 
-  setFilter(filterBy: DropAcquisitionType) {
-    this.filterBy = filterBy;
+  restrictTo(filters: DropAcquisitionType[] | null) {
+    this.filters = filters;
+    return this;
   }
 
   async getItemDropLocation(item: string) {
@@ -199,129 +202,147 @@ class WarframeDrops {
         which are mod drops sorted by mod)
       */
 
-      for (const item of dropData.blueprintLocations) {
-        if (!looksLikeItem(item.itemName)) continue;
+      if (!this.filters || this.filters.includes("enemy")) {
 
-        for (const enemy of item.enemies)
-          addDropLocation({
-            acquirableThrough: "enemy",
-            rewardName: item.itemName,
-            dropChance: enemy.enemyItemDropChance,
-            description: enemy.enemyName,
-          });
-      }
-
-      // Mod locations sorted by mod
-      // TODO: As it is sorted by mod, we could implement binary search instead of linear search here
-      for (const mod of dropData.modLocations) {
-        if (!looksLikeItem(mod.modName)) continue;
-
-        for (const enemy of mod.enemies) {
-          addDropLocation({
-            acquirableThrough: "enemy",
-            rewardName: mod.modName,
-            dropChance: enemy.enemyModDropChance,
-            description: enemy.enemyName,
-          });
+        for (const item of dropData.blueprintLocations) {
+          if (!looksLikeItem(item.itemName)) continue;
+  
+          for (const enemy of item.enemies)
+            addDropLocation({
+              acquirableThrough: "enemy",
+              rewardName: item.itemName,
+              dropChance: enemy.enemyItemDropChance,
+              description: enemy.enemyName,
+            });
         }
+  
+        // Mod locations sorted by mod
+        // TODO: As it is sorted by mod, we could implement binary search instead of linear search here
+        for (const mod of dropData.modLocations) {
+          if (!looksLikeItem(mod.modName)) continue;
+  
+          for (const enemy of mod.enemies) {
+            addDropLocation({
+              acquirableThrough: "enemy",
+              rewardName: mod.modName,
+              dropChance: enemy.enemyModDropChance,
+              description: enemy.enemyName,
+            });
+          }
+        }
+
       }
 
-      for (const [planet, planetRewards] of Object.entries(
-        dropData.missionRewards
-      )) {
-        for (const [missionNode, missionNodeData] of Object.entries(
-          planetRewards
+      if (!this.filters || this.filters.includes("planetNode")) {
+
+        for (const [planet, planetRewards] of Object.entries(
+          dropData.missionRewards
         )) {
-          for (const rewards of Object.values(missionNodeData.rewards)) {
-            let rewardArray: ItemReward[];
-
-            // Rewards sometimes isn't array, it may come as a single item object
-            if (!Array.isArray(rewards)) rewardArray = [rewards];
-            else rewardArray = rewards;
-
-            for (const reward of rewardArray) {
-              if (looksLikeItem(reward.itemName)) {
-                addDropLocation({
-                  acquirableThrough: "planetNode",
-                  rewardName: reward.itemName,
-                  dropChance: reward.chance,
-                  dropNodeName: planet,
-                  description: `${missionNode}`,
-                });
+          for (const [missionNode, missionNodeData] of Object.entries(
+            planetRewards
+          )) {
+            for (const rewards of Object.values(missionNodeData.rewards)) {
+              let rewardArray: ItemReward[];
+  
+              // Rewards sometimes isn't array, it may come as a single item object
+              if (!Array.isArray(rewards)) rewardArray = [rewards];
+              else rewardArray = rewards;
+  
+              for (const reward of rewardArray) {
+                if (looksLikeItem(reward.itemName)) {
+                  addDropLocation({
+                    acquirableThrough: "planetNode",
+                    rewardName: reward.itemName,
+                    dropChance: reward.chance,
+                    dropNodeName: planet,
+                    description: `${missionNode}`,
+                  });
+                }
               }
             }
           }
         }
+
       }
 
-      for (const reward of dropData.sortieRewards) {
-        if (looksLikeItem(reward.itemName))
-          addDropLocation({
-            acquirableThrough: "sortie",
-            rewardName: reward.itemName,
-            dropChance: reward.chance,
-          });
-      }
-
-      for (const objective of dropData.transientRewards) {
-        for (const reward of objective.rewards)
+      if (!this.filters || this.filters.includes("sortie")) {
+        for (const reward of dropData.sortieRewards) {
           if (looksLikeItem(reward.itemName))
             addDropLocation({
-              acquirableThrough: "objective",
+              acquirableThrough: "sortie",
               rewardName: reward.itemName,
               dropChance: reward.chance,
-              description: objective.objectiveName
             });
+        }
       }
 
-      for (const bounty of dropData.cetusBountyRewards) {
-        for (const rewards of Object.values(bounty.rewards))
-          for (const reward of rewards)
+      if (!this.filters || this.filters.includes("objective")) {
+        for (const objective of dropData.transientRewards) {
+          for (const reward of objective.rewards)
             if (looksLikeItem(reward.itemName))
               addDropLocation({
-                acquirableThrough: "bounty",
+                acquirableThrough: "objective",
                 rewardName: reward.itemName,
                 dropChance: reward.chance,
-                dropNodeName: "Cetus",
-                description: `${bounty.bountyLevel}`
+                description: objective.objectiveName
               });
+        }
       }
 
-      for (const bounty of dropData.solarisBountyRewards) {
-        for (const rewards of Object.values(bounty.rewards))
-          for (const reward of rewards)
+      if (!this.filters || this.filters.includes("bounty")) {
+
+        for (const bounty of dropData.cetusBountyRewards) {
+          for (const rewards of Object.values(bounty.rewards))
+            for (const reward of rewards)
+              if (looksLikeItem(reward.itemName))
+                addDropLocation({
+                  acquirableThrough: "bounty",
+                  rewardName: reward.itemName,
+                  dropChance: reward.chance,
+                  dropNodeName: "Cetus",
+                  description: `${bounty.bountyLevel}`
+                });
+        }
+  
+        for (const bounty of dropData.solarisBountyRewards) {
+          for (const rewards of Object.values(bounty.rewards))
+            for (const reward of rewards)
+              if (looksLikeItem(reward.itemName))
+                addDropLocation({
+                  acquirableThrough: "bounty",
+                  rewardName: reward.itemName,
+                  dropChance: reward.chance,
+                  dropNodeName: "Fortuna",
+                  description: `${bounty.bountyLevel}`
+                });
+        }
+  
+        for (const bounty of dropData.deimosRewards) {
+          for (const rewards of Object.values(bounty.rewards))
+            for (const reward of rewards)
+              if (looksLikeItem(reward.itemName))
+                addDropLocation({
+                  acquirableThrough: "bounty",
+                  rewardName: reward.itemName,
+                  dropChance: reward.chance,
+                  dropNodeName: "Deimos",
+                  description: `${bounty.bountyLevel}`
+                });
+        }
+
+      }
+
+      if (!this.filters || this.filters.includes("relic")) {
+        for (const relic of dropData.relics) {
+          for (const reward of relic.rewards) {
             if (looksLikeItem(reward.itemName))
               addDropLocation({
-                acquirableThrough: "bounty",
+                acquirableThrough: "relic",
                 rewardName: reward.itemName,
                 dropChance: reward.chance,
-                dropNodeName: "Fortuna",
-                description: `${bounty.bountyLevel}`
+                description: `${relic.tier} ${relic.relicName} (${relic.state})`
               });
-      }
-
-      for (const bounty of dropData.deimosRewards) {
-        for (const rewards of Object.values(bounty.rewards))
-          for (const reward of rewards)
-            if (looksLikeItem(reward.itemName))
-              addDropLocation({
-                acquirableThrough: "bounty",
-                rewardName: reward.itemName,
-                dropChance: reward.chance,
-                dropNodeName: "Deimos",
-                description: `${bounty.bountyLevel}`
-              });
-      }
-
-      for (const relic of dropData.relics) {
-        for (const reward of relic.rewards) {
-          if (looksLikeItem(reward.itemName))
-            addDropLocation({
-              acquirableThrough: "relic",
-              rewardName: reward.itemName,
-              dropChance: reward.chance,
-              description: `${relic.tier} ${relic.relicName} (${relic.state})`
-            });
+          }
         }
       }
 

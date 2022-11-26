@@ -24,16 +24,10 @@ const WorldState = createCommand({
       )
       .addStringOption((option) =>
         option
-          .setName("filter")
-          .setDescription("Where to look for the item in the drop data")
-          // ! This must match DropAcqusitionType
-          .addChoices(
-            { name: "Enemies", value: "enemy" },
-            { name: "Planet nodes", value: "planetNode" },
-            { name: "Sortie", value: "sortie" },
-            { name: "Bounties", value: "bounty" },
-            { name: "Relics", value: "relic" },
-            { name: "Other", value: "objective" }
+          .setName("filters")
+          .setDescription(
+            "Comma-separated filters " +
+              `("enemy", "planetNode", "sortie", "objective", "bounty" and/or "relic")`
           )
       );
   },
@@ -41,16 +35,51 @@ const WorldState = createCommand({
     const item = interaction.options.getString("item");
 
     // TODO: implement filtering drop locations by drop acquisition type
-    const filter = interaction.options.getString("filter");
+    const filters = interaction.options.getString("filters");
+
+    // Parse comma-separated filters and removes whitespaces if there are any
+    let parsedFilters: string[] | null = null;
+
+    if (filters) {
+      parsedFilters = filters
+        .split(",")
+        .map((filter) => filter.replace(/\s+/g, ""));
+
+      console.log("Parsed filters:", JSON.stringify(parsedFilters));
+
+      const filterChoices = [
+        "enemy",
+        "planetNode",
+        "sortie",
+        "bounty",
+        "relic",
+        "objective",
+      ];
+
+      for (const parsedFilter of parsedFilters) {
+        if (!filterChoices.includes(parsedFilter)) {
+          await interaction.reply(
+            `_${parsedFilter}_ doesn't seem to be a valid filter. Are you sure that's what you meant?`
+          );
+          return;
+        }
+      }
+    }
 
     try {
-      const drops = await WarframeDrops.getItemDropLocation(item);
+      const drops = await WarframeDrops.restrictTo(
+        parsedFilters as DropAcquisitionType[] | null
+      ).getItemDropLocation(item);
 
       if (Object.keys(drops).length === 0) {
-        await interaction.reply(
-          `Item not found. Either _${item}_ doesn't exist or I don't know where to find it yet. ` +
-            "Sorry, Operator."
-        );
+        let message = `_${item}_ doesn't exist in the drop data`;
+
+        if (parsedFilters)
+          message += " for the specified filters";
+        
+        message += ".";
+
+        await interaction.reply(message);
         return;
       }
 
@@ -59,37 +88,36 @@ const WorldState = createCommand({
       const dropConfigs: DropTypeConfig[] = [
         {
           acquisitionType: "enemy",
-          label: "Shooting down enemies",
+          label: "shooting down enemies",
         },
         {
           acquisitionType: "planetNode",
-          label: "Completing missions",
+          label: "completing missions",
         },
         {
           acquisitionType: "sortie",
-          label: "Completing sorties",
+          label: "completing sorties",
         },
         {
           acquisitionType: "bounty",
-          label: "Completing bounties",
+          label: "completing bounties",
         },
         {
           acquisitionType: "relic",
-          label: "Opening relics",
+          label: "opening relics",
         },
         {
           acquisitionType: "objective",
-          label: "Other ways",
+          label: "through objectives",
         },
       ];
 
       for (const config of dropConfigs) {
         const filteredDrops = drops[config.acquisitionType] || {};
 
-        if (Object.keys(filteredDrops).length === 0)
-          continue;
+        if (Object.keys(filteredDrops).length === 0) continue;
 
-        let message = `${config.label}:\n\n`;
+        let message = `You can get it by ${config.label}:\n\n`;
 
         for (const [dropName, dropsByChance] of Object.entries(filteredDrops)) {
           message += `**${dropName}**\n`;
