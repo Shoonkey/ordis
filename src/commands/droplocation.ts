@@ -54,8 +54,7 @@ const WorldState = createCommand({
         return;
       }
 
-      let message = `Here's some drop data for _${item}_, `;
-      message += "by planet and drop chance:\n\n";
+      await interaction.reply(`Here's some drop data for _${item}_:`);
 
       const dropConfigs: DropTypeConfig[] = [
         {
@@ -84,42 +83,34 @@ const WorldState = createCommand({
         },
       ];
 
-      dropConfigs.forEach((config) => {
+      for (const config of dropConfigs) {
         const filteredDrops = drops[config.acquisitionType] || {};
 
-        if (Object.keys(filteredDrops).length === 0) return;
+        if (Object.keys(filteredDrops).length === 0)
+          continue;
 
-        message += `${config.label}:\n\n`;
+        let message = `${config.label}:\n\n`;
 
-        Object.entries(filteredDrops).forEach(
-          ([dropName, dropsByChance], index, arr) => {
-            message += `**${dropName}**\n`;
-            Object.entries(dropsByChance).forEach(
-              ([dropChanceStr, dropsByNode]) => {
-                message += `_${dropChanceStr}%_:\n`;
-                Object.entries(dropsByNode).forEach(
-                  ([dropNodeName, descriptions]) => {
-                    message += `- ${dropNodeName}\n`;
-                    message += descriptions
-                      .map((str) => `-- ${str}`)
-                      .join("\n");
-                    message += "\n";
-                  }
-                );
-              }
-            );
+        for (const [dropName, dropsByChance] of Object.entries(filteredDrops)) {
+          message += `**${dropName}**\n`;
 
-            if (index !== arr.length - 1) message += "\n";
+          for (const [dropChanceStr, dropsByNode] of Object.entries(
+            dropsByChance
+          )) {
+            message += `_${dropChanceStr}%_:\n`;
+
+            for (const [dropNodeName, descriptions] of Object.entries(
+              dropsByNode
+            )) {
+              message += `- ${dropNodeName}\n`;
+              message += descriptions.map((str) => `-- ${str}`).join("\n");
+              message += "\n";
+            }
           }
-        );
-      });
+        }
 
-      if (message.length > DISCORD_MESSAGE_LENGTH_LIMIT)
-        await interaction.reply(
-          "Woah, the data about this drop is too much for Discord. Consider adding a filter"
-        );
-
-      await interaction.reply(message);
+        await interaction.followUp(message);
+      }
     } catch (err) {
       if (err.fromAPI)
         await interaction.reply(`Trouble, Operator! ${err.message}`);
