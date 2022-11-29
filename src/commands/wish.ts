@@ -1,5 +1,4 @@
 import isNumeric from "validator/lib/isNumeric";
-import WFItems from "warframe-items";
 
 import createCommand from "../core/create-command";
 import formatItem from "../core/format-item";
@@ -8,6 +7,7 @@ import ItemType from "../core/models/ItemType";
 import WishlistData from "../core/models/WishlistData";
 import WishlistItem from "../core/models/WishlistItem";
 import { getDataContent, setDataContent } from "../core/use-data-folder";
+import getItemNameSuggestions from "../shared/autocomplete/item-name";
 
 const Wish = createCommand({
   configureBuilder(builder) {
@@ -228,57 +228,15 @@ const Wish = createCommand({
     const focusedAutocompleteOption = interaction.options.getFocused(true);
 
     if (focusedAutocompleteOption.name === "name") {
+      const suggestions = await getItemNameSuggestions({
+        name: focusedAutocompleteOption.value,
+        type: interaction.options.getString("type") as ItemType
+      });
 
-      // TODO: compute category to filter items by from type, if there is any at the moment
-      // This depends on the lib exporting their types to be done properly, which is currently
-      // pending (https://github.com/WFCD/warframe-items/issues/392)
-      const type = interaction.options.getString("type") as ItemType;
-
-      try {
-        const items = new WFItems({
-          category: [
-            "Arcanes",
-            "Archwing",
-            "Arch-Gun",
-            "Arch-Melee",
-            "Fish",
-            "Gear",
-            "Melee",
-            "Misc",
-            "Mods",
-            "Node",
-            "Pets",
-            "Primary",
-            "Relics",
-            "Resources",
-            "Secondary",
-            "Sentinels",
-            "SentinelWeapons",
-            "Skins",
-            "Warframes"
-          ],
-        });
-
-        // ! Respect Discord's option limit, which is 25 at a time
-        const MAX_RESULT_COUNT = 25;
-        const results = [];
-
-        const lowercaseOptionValue = focusedAutocompleteOption.value.toLowerCase();
-
-        for (const item of items) {
-          if (item.name.toLowerCase().includes(lowercaseOptionValue))
-            results.push({ name: item.name, value: item.name });
-          
-          if (results.length === MAX_RESULT_COUNT)
-            break;
-        }
-        
-        await interaction.respond(results);
-      } catch (e) {
-        console.error(e);
-      }
+      await interaction.respond(suggestions);
     }
-  },
+    
+  }
 });
 
 export default Wish;
