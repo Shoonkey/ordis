@@ -53,7 +53,7 @@ const Wish = createCommand({
           .addStringOption((option) =>
             option
               .setName("range")
-              .setDescription("Range of indexes to delete (x-y)")
+              .setDescription("Index or range of indices (x-y) of items to delete")
               .setRequired(true)
           )
       );
