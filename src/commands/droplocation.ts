@@ -8,8 +8,6 @@ interface DropTypeConfig {
   label: string;
 }
 
-const DISCORD_MESSAGE_LENGTH_LIMIT = 2000;
-
 const WorldState = createCommand({
   configureBuilder(builder) {
     builder

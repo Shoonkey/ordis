@@ -1,7 +1,7 @@
-import Item from "../shared/models/item";
 import labels from "./labels";
+import WishlistItem from "./models/WishlistItem";
 
-function formatItem(item: Item) {
+function formatItem(item: WishlistItem) {
 
   const label = labels[item.type];
 
@@ -16,7 +16,7 @@ function formatItem(item: Item) {
     .map(capitalizeWord)
     .join(" ");
 
-  return `${capitalizedItemName}/${label}`;
+  return `${capitalizedItemName}/${label} (${item.quantity || 1}x)`;
 }
 
 export default formatItem;

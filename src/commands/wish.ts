@@ -36,6 +36,11 @@ const Wish = createCommand({
               .setDescription("Item name")
               .setRequired(true)
               .setAutocomplete(true)
+          )
+          .addStringOption((option) =>
+            option
+              .setName("quantity")
+              .setDescription("How many of this item do you need")
           );
 
         return builder;
@@ -49,11 +54,13 @@ const Wish = createCommand({
       .addSubcommand((builder) =>
         builder
           .setName("remove")
-          .setDescription("Remove items according to the given range")
+          .setDescription("Remove items at given index or range of indices")
           .addStringOption((option) =>
             option
               .setName("range")
-              .setDescription("Index or range of indices (x-y) of items to delete")
+              .setDescription(
+                "Index or range of indices (x-y) of items to delete"
+              )
               .setRequired(true)
           )
       );
@@ -77,7 +84,16 @@ const Wish = createCommand({
     if (subcommand === "save") {
       const itemType = interaction.options.getString("type") as ItemType;
       const itemName = interaction.options.getString("name");
+      const itemQuantity = interaction.options.getString("quantity");
 
+      if (itemQuantity && !isNumeric(itemQuantity)) {
+        await interaction.reply(
+          `_${itemQuantity}_ should be numeric, Operator. What's this about?`
+        );
+        return;
+      }
+
+      const parsedQuantity = itemQuantity ? parseInt(itemQuantity, 10) : undefined;
       const requestedItems: WishlistItem[] = [];
 
       if (!labels[itemType]) {
@@ -89,9 +105,9 @@ const Wish = createCommand({
 
       if (itemType === "wf")
         ["bp", "n", "c", "sys"].forEach((type: ItemType) => {
-          requestedItems.push({ type, name: itemName });
+          requestedItems.push({ quantity: parsedQuantity, type, name: itemName });
         });
-      else requestedItems.push({ type: itemType, name: itemName });
+      else requestedItems.push({ quantity: parsedQuantity, type: itemType, name: itemName });
 
       const itemsToAdd = [];
       const itemsAlreadyInWishlist = [];
@@ -230,13 +246,12 @@ const Wish = createCommand({
     if (focusedAutocompleteOption.name === "name") {
       const suggestions = await getItemNameSuggestions({
         name: focusedAutocompleteOption.value,
-        type: interaction.options.getString("type") as ItemType
+        type: interaction.options.getString("type") as ItemType,
       });
 
       await interaction.respond(suggestions);
     }
-    
-  }
+  },
 });
 
 export default Wish;
